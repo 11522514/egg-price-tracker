@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Egg Price Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .card h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+
+        .current-price {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            border-radius: 10px;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .current-price .price {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .current-price .label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+        }
+
+        select, input, button {
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin: 5px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 400px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .comparison-table th {
+            background: #f7fafc;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .comparison-table tr:hover {
+            background: #f7fafc;
+        }
+
+        .price-difference {
+            font-weight: bold;
+        }
+
+        .price-difference.positive {
+            color: #e53e3e;
+        }
+
+        .price-difference.negative {
+            color: #38a169;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .add-price-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .add-price-form {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🥚 Egg Price Tracker</h1>
+            <p>Track national and local egg prices over time</p>
+        </div>
+
+        <div class="dashboard">
+            <!-- Current National Price -->
+            <div class="card">
+                <div class="current-price">
+                    <div class="label">National Average</div>
+                    <div class="price" id="nationalPrice">$2.25</div>
+                    <div class="label">per dozen</div>
+                </div>
+            </div>
+
+            <!-- Price Chart -->
+            <div class="card">
+                <h2>Price History</h2>
+                <div class="controls">
+                    <select id="locationSelect">
+                        <option value="NATIONAL">National Average</option>
+                    </select>
+                    <select id="timeRange">
+                        <option value="30">Last 30 days</option>
+                        <option value="90">Last 90 days</option>
+                        <option value="365">Last year</option>
+                    </select>
+                    <button onclick="updateChart()">Update Chart</button>
+                </div>
+                <div class="chart-container" id="chartContainer">
+                    <div class="loading">Loading chart...</div>
+                </div>
+            </div>
+
+            <!-- Price Comparison -->
+            <div class="card">
+                <h2>Price Comparison</h2>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Location</th>
+                            <th>Current Price</th>
+                            <th>vs National</th>
+                            <th>Difference</th>
+                        </tr>
+                    </thead>
+                    <tbody id="comparisonTable">
+                        <tr>
+                            <td colspan="4" class="loading">Loading comparison data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Add Price Data -->
+            <div class="card">
+                <h2>Add Price Data</h2>
+                <div class="add-price-form">
+                    <div class="form-group">
+                        <label for="priceDate">Date:</label>
+                        <input type="date" id="priceDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="priceLocation">Location:</label>
+                        <input type="text" id="priceLocation" placeholder="e.g., California" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="priceAmount">Price per Dozen:</label>
+                        <input type="number" id="priceAmount" step="0.01" min="0" placeholder="2.50" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="priceSource">Source:</label>
+                        <input type="text" id="priceSource" placeholder="Local Market" required>
+                    </div>
+                </div>
+                <button onclick="addPrice()">Add Price Data</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script>
+        const API_BASE = '/api';
+        let priceChart = null;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            loadLocations();
+            loadNationalPrice();
+            loadComparison();
+            updateChart();
+            
+            // Set today's date as default
+            document.getElementById('priceDate').value = new Date().toISOString().split('T')[0];
+        });
+
+        // Load locations for dropdown
+        async function loadLocations() {
+            try {
+                const response = await fetch(`${API_BASE}/locations`);
+                const locations = await response.json();
+                
+                const select = 
